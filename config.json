@@ -1,0 +1,30 @@
+{
+  "course_url": "https://www.educoder.net/classrooms/J2F8SUKL/shixun_homework",
+  "task_url": "https://www.educoder.net/tasks/J2F8SUKL/4115214/s7ka9e3cl5b2",
+  "browser": "edge",
+  "browser_binary": "",
+  "driver_path": "",
+  "headless": true,
+  "browser_arguments": [],
+  "page_timeout": 45,
+  "evaluation_timeout": 180,
+  "poll_interval": 1,
+  "max_attempts": 5,
+  "result_chars": 4500,
+  "codex": {
+    "model": "gpt-6-luna",
+    "command": [],
+    "reasoning_effort": "low",
+    "timeout": 300,
+    "max_attempts": 5,
+    "max_tasks": 100
+  },
+  "selectors": {
+    "description": "#task-left-panel [class*='markdown'], #task-left-panel [class*='tab-panel-body']",
+    "result": "#task-right-panel [class*='test-case-list'], #task-right-panel [class*='test-result'], #task-right-panel [class*='error']",
+    "evaluate": "",
+    "save": "",
+    "submit": "",
+    "submit_success": ""
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "files", "read_files", "answers"],
+  "properties": {
+    "action": {"type": "string", "enum": ["answer", "read", "choose"]},
+    "files": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "code"],
+      "properties": {"path": {"type": "string"}, "code": {"type": "string"}}
+    }},
+    "read_files": {"type": "array", "items": {"type": "string"}},
+    "answers": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["question_id", "positions"],
+      "properties": {
+        "question_id": {"type": "string"},
+        "positions": {"type": "array", "items": {"type": "integer"}}
+      }
+    }}
+  }
+}

@@ -1,0 +1,32 @@
+# Browser profiles, login/session data, runtime checkpoints and logs
+/.state/
+*.log
+
+# Local credentials (example configuration may be committed)
+.env
+.env.*
+!.env.example
+
+# Python environments, bytecode and test artifacts
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+/htmlcov/
+
+# Build artifacts and optional JavaScript dependencies
+/build/
+/dist/
+*.egg-info/
+node_modules/
+
+# Editor and operating system files
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
