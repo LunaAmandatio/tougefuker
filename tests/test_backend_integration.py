@@ -10,10 +10,11 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import BASE, load_json, write_json
-from service import build_id, ensure_server, remove_runtime, rpc
-import service
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import BASE, load_json, write_json
+from educoder_agent.service import build_id, ensure_server, remove_runtime, rpc
+from educoder_agent import service
+from educoder_agent.paths import ProjectPaths
 
 
 class TestBackendUpgradeIntegration(unittest.TestCase):
@@ -23,9 +24,10 @@ class TestBackendUpgradeIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=parent) as directory:
             base = Path(directory)
             # Copy only this tool's implementation; no lab files or browser profiles.
-            for name in ('edu.py', 'core.py', 'service.py', 'diagnostics.py', 'browser.js', 'config.json',
-                         'automation.py', 'codex_solver.py', 'solution.schema.json'):
-                shutil.copyfile(BASE / name, base / name)
+            for name in ProjectPaths().backend_files():
+                destination = base / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(BASE / name, destination)
             runtime_path = base / '.state' / 'service.json'
 
             class LegacyHandler(BaseHTTPRequestHandler):
@@ -58,7 +60,7 @@ class TestBackendUpgradeIntegration(unittest.TestCase):
                 self.assertTrue(logs['ok'])
                 self.assertEqual(logs['entries'][0]['error'], 'invalid_command')
                 self.assertEqual(logs['backend_version'], result['backend_version'])
-                config = load_json(base / 'config.json', {})
+                config = load_json(ProjectPaths(base).config, {})
                 write_json(base / '.state' / 'course.json', {'course_url': config['course_url'],
                     'experiments': [{'id': '4115214', 'title': 'fixture'}]})
                 selected = rpc('select', {'ids': ['4115214']}, base=base)

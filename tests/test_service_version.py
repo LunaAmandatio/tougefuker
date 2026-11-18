@@ -6,9 +6,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import BASE, DEFAULT_TASK, Engine
-from service import build_id, ensure_server, remove_runtime
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import BASE, DEFAULT_TASK, Engine
+from educoder_agent.service import build_id, ensure_server, remove_runtime
+from educoder_agent.paths import ProjectPaths
 
 
 class TestServiceVersion(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestServiceVersion(unittest.TestCase):
     def test_current_backend_is_reused_without_restart(self):
         base = self.temporary_base()
         version = build_id(base)
-        with patch('service.rpc', return_value={'ok': True, 'backend_version': version}) as rpc, patch('service.subprocess.Popen') as spawn:
+        with patch('educoder_agent.service.rpc', return_value={'ok': True, 'backend_version': version}) as rpc, patch('educoder_agent.service.subprocess.Popen') as spawn:
             result = ensure_server(base)
             self.assertFalse(result['updated'])
             rpc.assert_called_once()
@@ -33,7 +34,7 @@ class TestServiceVersion(unittest.TestCase):
         version = build_id(base)
         responses = [{'ok': True, 'service': 'educoder-agent'}, {'ok': True},
                      {'ok': True, 'backend_version': version}]
-        with patch('service.rpc', side_effect=responses) as rpc, patch('service.time.sleep'), patch('service.subprocess.Popen') as spawn:
+        with patch('educoder_agent.service.rpc', side_effect=responses) as rpc, patch('educoder_agent.service.time.sleep'), patch('educoder_agent.service.subprocess.Popen') as spawn:
             result = ensure_server(base)
             self.assertTrue(result['updated'])
             self.assertEqual([call.args[0] for call in rpc.call_args_list], ['ping', 'shutdown', 'ping'])
@@ -42,14 +43,16 @@ class TestServiceVersion(unittest.TestCase):
     def test_editing_adapter_changes_backend_fingerprint(self):
         base = self.temporary_base()
         before = build_id(base)
-        (base / 'browser.js').write_text('// tool adapter revision', encoding='utf-8')
+        script = ProjectPaths(base).browser_script
+        script.parent.mkdir(parents=True, exist_ok=True)
+        script.write_text('// tool adapter revision', encoding='utf-8')
         self.assertNotEqual(before, build_id(base))
 
     def test_windows_busy_runtime_delete_is_retried(self):
         from unittest.mock import Mock
         path = Mock()
         path.unlink.side_effect = [PermissionError('busy'), None]
-        with patch('service.time.sleep'):
+        with patch('educoder_agent.service.time.sleep'):
             remove_runtime(path)
         self.assertEqual(path.unlink.call_count, 2)
 

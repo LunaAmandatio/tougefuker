@@ -5,10 +5,11 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext, ttk
 
-from core import BASE, DEFAULT_COURSE, DEFAULT_TASK, ToolError, load_json, write_json
-from service import ensure_server, error_result, rpc
-from service import build_id
-from codex_solver import DEFAULT_MODEL, normalize_model
+from .core import BASE, DEFAULT_COURSE, DEFAULT_TASK, ToolError, load_json, write_json
+from .service import ensure_server, error_result, rpc
+from .service import build_id
+from .codex_solver import DEFAULT_MODEL, normalize_model
+from .paths import ProjectPaths
 
 MODEL_SETTINGS = BASE / '.state' / 'ui.json'
 
@@ -40,7 +41,7 @@ class App:
         root.title('头歌实验助手 · Selenium · ' + build_id())
         root.geometry('1120x900')
         root.minsize(880, 760)
-        config = load_json(BASE / 'config.json', {})
+        config = load_json(ProjectPaths().config, {})
         preferences = model_preferences()
         self.course = tk.StringVar(value=config.get('course_url', DEFAULT_COURSE))
         self.task = tk.StringVar(value=config.get('task_url', DEFAULT_TASK))

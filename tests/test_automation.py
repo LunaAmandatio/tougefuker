@@ -8,9 +8,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from automation import AutoController
-from core import BASE, ToolError, digest
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.automation import AutoController
+from educoder_agent.core import BASE, ToolError, digest
 
 
 def context(tid='fixture', path='remote/file', code='synthetic initial value'):
@@ -61,7 +61,7 @@ class TestAutomation(unittest.TestCase):
                     cancel.set()
                 return next(self.answers), {'input_tokens': 10, 'output_tokens': 5}
         controller = AutoController(worker, Solver)
-        with patch('diagnostics.record_error', return_value={'error_id': 'fixture'}):
+        with patch('educoder_agent.diagnostics.record_error', return_value={'error_id': 'fixture'}):
             controller.start('requested-model')
             controller.thread.join(timeout=3)
         self.assertFalse(controller.state['running'])
@@ -148,7 +148,7 @@ class TestAutomation(unittest.TestCase):
                 raise ToolError('模型 chosen-model 不存在', 'model_not_found', model=model,
                                 provider_code='model_not_found', http_status=404)
         controller = AutoController(worker, FailedSolver)
-        with patch('diagnostics.record_error', return_value={'error_id': 'fixture'}):
+        with patch('educoder_agent.diagnostics.record_error', return_value={'error_id': 'fixture'}):
             controller.start('chosen-model')
             controller.thread.join(timeout=3)
         status = controller.status()

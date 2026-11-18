@@ -6,8 +6,8 @@ import json
 import threading
 from collections import deque
 
-from codex_solver import CodexSolver, DEFAULT_MODEL, normalize_model
-from core import ToolError
+from .codex_solver import CodexSolver, DEFAULT_MODEL, normalize_model
+from .core import ToolError
 
 
 class AutoController:
@@ -147,7 +147,7 @@ class AutoController:
                                 self.add_file(payload, self.call('context', {'path': path}))
                         continue
                     # Require a changed answer after failed evaluation; do not blindly resubmit.
-                    from core import digest
+                    from .core import digest
                     choosing = answer['action'] == 'choose'
                     submission = sorted([{'question_id': a['question_id'], 'positions': sorted(a['positions'])}
                                          for a in answer['answers']], key=lambda a: a['question_id']) if choosing else answer['files']
@@ -198,14 +198,14 @@ class AutoController:
             elif error.code == 'selection_complete':
                 self.update('complete', '勾选的实验已全部完成')
             else:
-                from diagnostics import record_error
+                from .diagnostics import record_error
                 diagnostic = record_error('auto', error)
                 self.update('error', str(error), error=error.code,
                             error_details={k: v for k, v in error.details.items()
                                            if k in ('model', 'provider_code', 'http_status', 'exit_code')}, **diagnostic)
         except Exception:
             # Never let arbitrary exception reprs leak prompts, generated source, or credentials.
-            from diagnostics import record_error
+            from .diagnostics import record_error
             error = ToolError('自动答题遇到内部错误，请检查工具日志', 'auto_internal_error')
             diagnostic = record_error('auto', error)
             self.update('error', str(error), error=error.code, **diagnostic)

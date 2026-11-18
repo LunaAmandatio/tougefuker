@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parent
+from .paths import BASE
 
 
 def record_error(command, error):

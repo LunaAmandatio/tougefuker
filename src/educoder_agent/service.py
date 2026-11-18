@@ -17,7 +17,8 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler, Request, build_opener
 
-from core import BASE, Engine, ToolError, load_json, write_json
+from .core import BASE, Engine, ToolError, load_json, write_json
+from .paths import ProjectPaths
 
 _background_services = []
 
@@ -37,8 +38,7 @@ def remove_runtime(path):
 
 def build_id(base=BASE):
     checksum = hashlib.sha256()
-    for name in ('core.py', 'service.py', 'browser.js', 'diagnostics.py', 'config.json',
-                 'automation.py', 'codex_solver.py', 'solution.schema.json'):
+    for name in ProjectPaths(base).backend_files():
         path = Path(base) / name
         checksum.update(name.encode('utf-8'))
         checksum.update(path.read_bytes() if path.exists() else b'')
@@ -46,7 +46,7 @@ def build_id(base=BASE):
 
 
 def error_result(e, command='client'):
-    from diagnostics import record_error
+    from .diagnostics import record_error
     try:
         diagnostic = record_error(command, e)
     except OSError:
@@ -106,7 +106,7 @@ def serve(base=BASE):
     token = secrets.token_urlsafe(32)
     worker = BrowserWorker(base)
     busy = threading.Lock()
-    from automation import AutoController
+    from .automation import AutoController
     automation = AutoController(worker)
 
     class Handler(BaseHTTPRequestHandler):
@@ -145,7 +145,7 @@ def serve(base=BASE):
                 self.reply({'ok': True, 'service': 'educoder-agent', 'busy': busy.locked()})
                 return
             if command == 'logs':
-                from diagnostics import read_logs
+                from .diagnostics import read_logs
                 try:
                     self.reply({'ok': True, **read_logs(args.get('tail', 30))})
                 except (ValueError, TypeError) as e:

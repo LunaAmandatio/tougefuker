@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import BASE, Engine, SnapshotStore, ToolError, load_json, write_json
-from edu import parser
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import BASE, Engine, SnapshotStore, ToolError, load_json, write_json
+from educoder_agent.cli import parser
 
 
 class TestSelection(unittest.TestCase):

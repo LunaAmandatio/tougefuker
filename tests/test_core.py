@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import BASE, Engine, SnapshotStore, ToolError, compact_result, digest, task_id, validate_url
-from edu import parse_input
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import BASE, Engine, SnapshotStore, ToolError, compact_result, digest, task_id, validate_url
+from educoder_agent.cli import parse_input
 
 
 class TestSnapshots(unittest.TestCase):
@@ -112,7 +112,7 @@ class TestGuards(unittest.TestCase):
         engine.events.append({'seq': 1, 'path': '/api/tasks/abc/game_build.json', 'data': {'status': 1}})
         engine.start_evaluation = Mock(return_value=0)
         engine.js = Mock(return_value={})
-        with patch('core.write_json'), patch('core.time.monotonic', side_effect=[0, 0, 2]):
+        with patch('educoder_agent.core.write_json'), patch('educoder_agent.core.time.monotonic', side_effect=[0, 0, 2]):
             with self.assertRaises(ToolError) as error:
                 engine.evaluate(timeout=1)
             self.assertEqual(error.exception.code, 'evaluation_timeout')
@@ -163,7 +163,7 @@ class TestEvaluationReady(unittest.TestCase):
         self.engine.check_selection = Mock()
         self.engine.store.checkpoint = Mock(return_value={})
         self.engine.js = Mock(return_value={'clicked': False, 'reason': 'disabled', 'enabled': 0})
-        with patch('core.time.monotonic', side_effect=[0, 0, 46]), patch('core.write_json') as write:
+        with patch('educoder_agent.core.time.monotonic', side_effect=[0, 0, 46]), patch('educoder_agent.core.write_json') as write:
             with self.assertRaises(ToolError) as error:
                 self.engine.evaluate()
         self.assertEqual(error.exception.code, 'evaluation_button_timeout')

@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import ToolError
-from codex_solver import CodexSolver, command_args, failure_error, normalize_model, validate_answer
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import ToolError
+from educoder_agent.codex_solver import CodexSolver, command_args, failure_error, normalize_model, validate_answer
 
 
 CONTEXT = {'task_id': 'fixture', 'description': 'fixture description',
@@ -28,7 +28,7 @@ class TestCodexSolver(unittest.TestCase):
                   + repr(json.dumps(ANSWER)) + '}})); '
                   'print(json.dumps({"type":"turn.completed","usage":{"input_tokens":20,"output_tokens":8}}))')
         events = []
-        with patch('codex_solver.disabled_mcp_config', return_value=[]):
+        with patch('educoder_agent.codex_solver.disabled_mcp_config', return_value=[]):
             solver = CodexSolver(self.config(script), lambda *e: events.append(e))
             answer, usage = solver.solve(CONTEXT, 'requested-model', threading.Event())
             args = command_args(solver.config, 'requested-model')
@@ -52,7 +52,7 @@ class TestCodexSolver(unittest.TestCase):
 
     def test_cli_errors_do_not_expose_stderr_source_or_credentials(self):
         script = 'import sys; sys.stdin.read(); sys.stderr.write("MODEL_NOT_FOUND secret-source token=private"); sys.exit(1)'
-        with patch('codex_solver.disabled_mcp_config', return_value=[]):
+        with patch('educoder_agent.codex_solver.disabled_mcp_config', return_value=[]):
             with self.assertRaises(ToolError) as error:
                 CodexSolver(self.config(script), lambda *e: None).solve(CONTEXT, 'requested-model', threading.Event())
         self.assertEqual(error.exception.code, 'model_not_found')
@@ -64,14 +64,14 @@ class TestCodexSolver(unittest.TestCase):
     def test_timeout_terminates_child(self):
         config = self.config('import sys,time; sys.stdin.read(); time.sleep(5)')
         config['timeout'] = 0.1
-        with patch('codex_solver.disabled_mcp_config', return_value=[]):
+        with patch('educoder_agent.codex_solver.disabled_mcp_config', return_value=[]):
             with self.assertRaises(ToolError) as error:
                 CodexSolver(config, lambda *e: None).solve(CONTEXT, 'requested-model', threading.Event())
         self.assertEqual(error.exception.code, 'model_timeout')
 
     def test_model_tool_use_is_rejected(self):
         script = 'import sys,json; sys.stdin.read(); print(json.dumps({"type":"item.started","item":{"type":"command_execution"}}))'
-        with patch('codex_solver.disabled_mcp_config', return_value=[]):
+        with patch('educoder_agent.codex_solver.disabled_mcp_config', return_value=[]):
             with self.assertRaises(ToolError) as error:
                 CodexSolver(self.config(script), lambda *e: None).solve(CONTEXT, 'requested-model', threading.Event())
         self.assertEqual(error.exception.code, 'unexpected_model_tool')
@@ -105,7 +105,7 @@ class TestCodexSolver(unittest.TestCase):
         script = ('import sys,json,time; sys.stdin.read(); '
                   'print(json.dumps({"type":"turn.failed","error":{"code":"model_not_found",'
                   '"message":"fixture unavailable token=private"}}),flush=True); time.sleep(5)')
-        with patch('codex_solver.disabled_mcp_config', return_value=[]):
+        with patch('educoder_agent.codex_solver.disabled_mcp_config', return_value=[]):
             with self.assertRaises(ToolError) as error:
                 CodexSolver(self.config(script), lambda *e: None).solve(CONTEXT, 'chosen-model', threading.Event())
         self.assertEqual(error.exception.code, 'model_not_found')

@@ -1,7 +1,7 @@
 // Deterministic adapter checks: simulated React/editor metadata, no lab code execution.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const run = new Function(fs.readFileSync(require('node:path').join(__dirname, '../browser.js'), 'utf8'));
+const run = new Function(fs.readFileSync(require('node:path').join(__dirname, '../assets/browser.js'), 'utf8'));
 let value = 'synthetic model contents\n'.repeat(1200);
 const model = {getValue: () => value, getLanguageId: () => 'plaintext'};
 const node = title => ({title, parentElement: null, getClientRects: () => [1],

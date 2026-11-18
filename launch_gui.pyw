@@ -1,3 +1,8 @@
-from gui import launch
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'src'))
+
+from educoder_agent.gui import launch
 
 launch()

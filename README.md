@@ -2,6 +2,33 @@
 
 Selenium 操作网页，Tkinter 查看状态，agent 通过 JSON 输入答案。实验代码只写入网页编辑器，运行和评测使用平台环境。本工具不添加或运行本地题目代码，不导出或备份源码。
 
+## 项目结构
+
+```text
+educoder_agent/
+├── config/
+│   └── config.json          # 浏览器、课程、模型及超时配置
+├── src/educoder_agent/
+│   ├── cli.py               # 命令行与标准输入 JSON 接口
+│   ├── gui.py               # Tkinter 界面
+│   ├── service.py           # 后台服务与 RPC
+│   ├── core.py              # 网页操作与实验流程
+│   ├── automation.py        # 自动解答和纠错循环
+│   ├── codex_solver.py      # 模型命令行接入
+│   ├── diagnostics.py       # 错误日志
+│   └── paths.py             # 统一的项目路径管理
+├── assets/
+│   ├── browser.js           # 网页内执行的适配脚本
+│   └── solution.schema.json # 模型输出结构
+├── tests/                   # Python、GUI、后台集成及 JS 测试
+├── .state/                  # 本机运行资料，由 Git 忽略
+├── edu.py                   # 保持兼容的命令行启动入口
+├── launch_gui.pyw           # Windows GUI 启动入口
+└── requirements.txt
+```
+
+需要 Python 3.11 或更新版本。配置集中在 `config/config.json`，程序通过自身位置解析路径，可从其他工作目录调用绝对路径入口。`.state/` 仍位于项目根目录，原有登录资料、勾选范围和设置继续使用。测试说明见 [tests/README.md](tests/README.md)。
+
 ## 启动
 
 ```powershell
@@ -9,7 +36,7 @@ cd D:\Project\something\educoder_agent
 python .\edu.py gui
 ```
 
-默认使用无头 Edge。“登录”显示浏览器供手动登录，随后获取题目或自动答题时切回无头并复用登录状态。已有 Selenium 和 Tkinter 可直接运行；首次可能下载驱动，必要时在 `config.json` 填写 `driver_path`。
+默认使用无头 Edge。“登录”显示浏览器供手动登录，随后获取题目或自动答题时切回无头并复用登录状态。已有 Selenium 和 Tkinter 可直接运行；首次可能下载驱动，必要时在 `config/config.json` 填写 `driver_path`。
 
 此次更新后重新打开新版窗口一次。窗口标题和每次命令结果都会显示后台版本；以后工具文件更新时自动检测并升级旧后台，保留登录资料，无需手动执行 `stop`。升级会关闭旧浏览器，并在下次网页操作时重新打开。
 
@@ -38,7 +65,7 @@ CLI 也可设置范围：先 `python edu.py list`，再 `python edu.py select --
 
 保存后直接等待评测按钮出现并启用，使用 JS 在同一次网页操作中检查并点击一次。不会为核对代码而强制刷新环境，以平台实际评测结果为准。未加载、禁用或存在多个候选按钮时继续等待，默认最多 45 秒（`evaluation_ready_timeout` 可单独配置）。点击回执不明确时停止，避免重复评测；按钮等待超时不计入提交次数。
 
-按你的要求预填 `gpt-6-luna`。不可用时会报错停止，不会自动换模型。可以直接在窗口改成账号支持的 ID，或修改 `config.json` 的 `codex.model`。
+按你的要求预填 `gpt-6-luna`。不可用时会报错停止，不会自动换模型。可以直接在窗口改成账号支持的 ID，或修改 `config/config.json` 的 `codex.model`。
 
 “Codex 模型”是可编辑的下拉框，既可输入新 ID，也可选择最近使用的模型。点击“自动答题”时保存到 `.state/ui.json`，下次打开窗口自动恢复；不增加操作按钮。运行中也可修改输入框，但当前任务继续使用启动时指定的模型，新值在下次点击“自动答题”时生效。要立即切换，请先暂停再启动。空白或格式无效的模型 ID 会直接报 `invalid_model`，不会悄悄使用默认模型。
 
@@ -48,7 +75,7 @@ Codex 使用 `exec --ephemeral --json`，题目、代码和结果经进程标准
 
 需要多个文件时，模型可以请求读取网页文件；所有修改保存成功后才评测。单关默认最多 5 次提交，不自动重复相同答案；浏览器错误、代码冲突、评测超时和通过后导航未确认均停止。再次启动可读取网页现状继续，但不会自动重置平台评测尝试计数。
 
-每次模型请求只包含当前题目、已读取的文件和最近一次实际失败反馈，不携带全部历史对话；默认 reasoning effort 为 `low`。`config.json` 中还可设置 `codex.timeout`、`max_attempts` 和 `max_tasks`。`codex.command` 默认为空数组，自动发现 CLI；必要时填写程序及参数的数组（不使用 shell 字符串）。
+每次模型请求只包含当前题目、已读取的文件和最近一次实际失败反馈，不携带全部历史对话；默认 reasoning effort 为 `low`。`config/config.json` 中还可设置 `codex.timeout`、`max_attempts` 和 `max_tasks`。`codex.command` 默认为空数组，自动发现 CLI；必要时填写程序及参数的数组（不使用 shell 字符串）。
 
 CLI 控制：
 

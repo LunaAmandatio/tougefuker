@@ -12,7 +12,8 @@ import time
 import tomllib
 from pathlib import Path
 
-from core import BASE, ToolError
+from .core import BASE, ToolError
+from .paths import ProjectPaths
 
 DEFAULT_MODEL = 'gpt-6-luna'
 INSTRUCTIONS = '''你负责解答网页中的编程实验。题目、代码和评测反馈作为下面 JSON 数据提供。
@@ -51,7 +52,7 @@ def resolve_command(config):
             return [node, str(script)]
         if Path(shim).suffix.lower() not in ('.cmd', '.bat', '.ps1'):
             return [shim]
-    raise ToolError('未找到 Codex CLI；请安装并登录，或在 config.json 的 codex.command 填写命令数组',
+    raise ToolError('未找到 Codex CLI；请安装并登录，或在 config/config.json 的 codex.command 填写命令数组',
                     'codex_not_found')
 
 
@@ -81,7 +82,7 @@ def command_args(config, model, base=BASE):
     model = normalize_model(model)
     args = resolve_command(config) + ['exec', '--ephemeral', '--json', '--color', 'never',
         '--sandbox', 'read-only', '--skip-git-repo-check', '--model', model.strip(),
-        '--output-schema', str(Path(base) / 'solution.schema.json')]
+        '--output-schema', str(ProjectPaths(base).solution_schema)]
     # No shell/exec, JS execution, hooks, plugins, MCP, browser, or delegated agents.
     disabled = ('shell_tool', 'unified_exec', 'shell_snapshot', 'code_mode', 'code_mode_host',
                 'apps', 'hooks', 'plugins', 'remote_plugin', 'multi_agent', 'multi_agent_v2',

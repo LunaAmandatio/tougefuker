@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from gui import App
-from core import BASE, load_json
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.gui import App
+from educoder_agent.core import BASE, load_json
 
 
 class TestSelectionGUI(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestSelectionGUI(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(dir=directory)
         self.addCleanup(self.temp.cleanup)
         self.model_settings = Path(self.temp.name) / 'ui.json'
-        settings_patch = patch('gui.MODEL_SETTINGS', self.model_settings)
+        settings_patch = patch('educoder_agent.gui.MODEL_SETTINGS', self.model_settings)
         settings_patch.start()
         self.addCleanup(settings_patch.stop)
         self.app = App(self.root)

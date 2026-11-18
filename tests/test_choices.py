@@ -7,10 +7,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import BASE, DEFAULT_COURSE, Engine, ToolError, choice_result, compact_result, load_json, write_json
-from codex_solver import validate_answer, validate_choices
-from edu import parse_input
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import BASE, DEFAULT_COURSE, Engine, ToolError, choice_result, compact_result, load_json, write_json
+from educoder_agent.codex_solver import validate_answer, validate_choices
+from educoder_agent.cli import parse_input
+from educoder_agent.paths import ProjectPaths
 
 
 QUESTIONS = [{'id': 'single', 'subject': 'fixture question', 'multiple': False,
@@ -25,7 +26,7 @@ class TestChoiceValidation(unittest.TestCase):
         self.assertEqual(validate_answer(value, {'task_type': 'choice', 'choices': QUESTIONS}), value)
         parsed = parse_input(json.dumps({'task_id': 'fixture', 'answers': ANSWERS, 'advance': False}))
         self.assertEqual(parsed, {'task': 'fixture', 'answers': ANSWERS, 'advance': False})
-        schema = load_json(BASE / 'solution.schema.json')
+        schema = load_json(ProjectPaths().solution_schema)
         self.assertIn('choose', schema['properties']['action']['enum'])
         self.assertIn('answers', schema['required'])
 
@@ -70,8 +71,10 @@ class TestChoiceEngine(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(dir=test_root)
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
-        shutil.copyfile(BASE / 'browser.js', self.base / 'browser.js')
-        write_json(self.base / 'config.json', {'course_url': DEFAULT_COURSE})
+        paths = ProjectPaths(self.base)
+        paths.browser_script.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ProjectPaths().browser_script, paths.browser_script)
+        write_json(paths.config, {'course_url': DEFAULT_COURSE})
         self.engine = Engine(self.base)
         self.snap = {'url': 'https://www.educoder.net/tasks/J2F8SUKL/4115215/fixture',
                      'task_id': 'fixture', 'task_type': 'choice', 'choices': QUESTIONS,
@@ -118,7 +121,7 @@ class TestChoiceEngine(unittest.TestCase):
                 'had_all_submmit': True, 'choose_correct_num': 1, 'challenge_chooses_count': 2,
                 'test_sets': [{'result': False, 'actual_output': 'A'}]}}])
         self.engine.context_from_snapshot(self.snap)
-        with patch('diagnostics.record_error', return_value={}):
+        with patch('educoder_agent.diagnostics.record_error', return_value={}):
             result = self.engine.evaluate(timeout=1)
         self.assertFalse(result['result']['passed'])
         self.assertEqual(result['result']['failed_cases'][0]['actual_output'], 'A')

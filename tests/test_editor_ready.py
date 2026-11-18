@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from core import Engine, ToolError
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from educoder_agent.core import Engine, ToolError
 
 
 class TestEditorReady(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestEditorReady(unittest.TestCase):
 
     def test_editor_timeout_returns_file_and_notice_metadata(self):
         with patch.object(self.engine, 'wait_snapshot', return_value=self.loading), \
-                patch('core.time.monotonic', side_effect=[0, 46]), \
+                patch('educoder_agent.core.time.monotonic', side_effect=[0, 46]), \
                 patch.object(self.engine, 'js', return_value={'dialogs': ['fixture notice']}):
             with self.assertRaises(ToolError) as error:
                 self.engine.select_file('dir/file')

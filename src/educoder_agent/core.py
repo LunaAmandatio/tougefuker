@@ -13,7 +13,7 @@ from collections import deque
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse
 
-BASE = Path(__file__).resolve().parent
+from .paths import BASE, ProjectPaths
 DEFAULT_COURSE = 'https://www.educoder.net/classrooms/J2F8SUKL/shixun_homework'
 DEFAULT_TASK = 'https://www.educoder.net/tasks/J2F8SUKL/4115214/s7ka9e3cl5b2'
 
@@ -165,15 +165,16 @@ class SnapshotStore:
 class Engine:
     def __init__(self, base=BASE):
         self.base = Path(base).resolve()
-        self.config = load_json(self.base / 'config.json', {})
-        self.root = self.base / '.state'
+        self.paths = ProjectPaths(self.base)
+        self.config = load_json(self.paths.config, {})
+        self.root = self.paths.state
         self.root.mkdir(parents=True, exist_ok=True)
         self.store = SnapshotStore(self.root)
         self.browser = None
         self.browser_headless = None
         self.cancel = threading.Event()
-        self.script = (self.base / 'browser.js').read_text(encoding='utf-8')
-        self.script_stamp = (self.base / 'browser.js').stat().st_mtime_ns
+        self.script = self.paths.browser_script.read_text(encoding='utf-8')
+        self.script_stamp = self.paths.browser_script.stat().st_mtime_ns
         self.events = deque(maxlen=100)
         self.requests = {}
         self.seq = 0
@@ -255,7 +256,7 @@ class Engine:
         self.check_cancel()
         if not self.browser:
             raise ToolError('请先运行 login 或 open 打开浏览器', 'browser_not_open')
-        path = self.base / 'browser.js'
+        path = self.paths.browser_script
         stamp = path.stat().st_mtime_ns
         if stamp != self.script_stamp:
             self.script = path.read_text(encoding='utf-8')
@@ -423,7 +424,7 @@ class Engine:
         self.check_selection(snap['url'])
         if task_id(snap['url']) != task or snap.get('task_type') != 'choice':
             raise ToolError('当前网页不是指定的选择题关卡', 'task_mismatch')
-        from codex_solver import validate_choices
+        from .codex_solver import validate_choices
         validate_choices(answers, snap.get('choices', []))
         result = self.js('set_choices', task_id=task, answers=answers)
         if not result or not result.get('selected'):
@@ -590,7 +591,7 @@ class Engine:
         if result['passed']:
             checkpoint['attempts'] = 0
         else:
-            from diagnostics import record_error
+            from .diagnostics import record_error
             result.update(record_error('test', ToolError(
                 '网页评测未通过，status=' + str(data.get('status')) + '，请根据返回的评测结果修改代码',
                 'evaluation_failed')))
